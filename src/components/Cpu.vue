@@ -17,7 +17,7 @@
 
         <div class="titulo">CPU</div>
         <div class="content">
-            <q-select v-model="algoritmo" label="Algoritmo" :options="algoritmos" dense filled />
+            <q-select v-model="model" label="Algoritmo" :options="algoritmos" dense filled />
             <q-input v-model.number="quantum" label="Quantum" type="number" dense filled />
             <q-btn color="primary" icon="save" label="GUARDAR"/>
         </div>
@@ -34,6 +34,12 @@ export default {
         procesoRunning: Object,
         algoritmos: Array,
         quantum: Number
+    },
+    data() {
+        return {
+            model: 0,
+            quantum2: 0
+        }
     },
 
 }
