@@ -50,60 +50,32 @@ export default {
             procesos: []
         });
 
-        // APROPIATIVO
+        // NO APROPIATIVO
         function dispathFIFO() {
 
             let running = state.procesos.find(p => p.estado === 2);
+            let position = state.procesos.findIndex(p => p.estado === 2);
+
             if(running.cpuRestante !== 0) {
                 running.cpuRestante--;
-                running.envejecimiento++;
-                running.tiempoLlegada++;
-                return running;
+                running.envejecimiento++; // ??
             }
             else {
-                running.tiempoLlegada = null;
+                running.tiempoLlegada = 0;
                 running.cpuAsignado = 0;
                 running.envejecimiento = 0;
                 running.cpuRestante = 0;
                 running.estado = 4;
+            }
 
-                return state.procesos
+            state.procesos[position] = running;
+            return state.procesos
                     .find(p => p.estado === 1)
                     .sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)[0];
-            }
-
         }
 
-        // NO APROPIATIVO
+        // APROPIATIVO
         function dispathRR() {
-
-            let running = state.procesos.find(p => p.estado === 2);
-            if(running.quantum !== 0) {
-                running.cpuRestante--;
-                running.quantum--;
-                running.envejecimiento++;
-                return running;
-            }
-            else {
-
-                if(running.cpuRestante !== 0){
-                    running.quantum = state.tamQuantum;
-                    running.envejecimiento++;
-                }
-                else {
-                    running.tiempoLlegada = null;
-                    running.cpuAsignado = 0;
-                    running.envejecimiento = 0;
-                    running.cpuRestante = 0;
-                    running.quantum = 0;
-                    running.estado = 4;
-
-                    return state.procesos
-                        .find(p => p.estado === 1)
-                        .sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)[0];
-                }
-            }
-
         }
 
         // APROPIATIVO
@@ -116,8 +88,8 @@ export default {
 
         function dispatch() {
             state.relojInterno++;
-            state.procesos.forEach(p => {
-                if(p.estado === 1)
+            state.procesos.map(p => {
+                if(p.estado === 1 || p.estado === 2)
                     p.tiempoLlegada++;
             });
 
