@@ -6,7 +6,7 @@
             <q-btn color="primary" icon="play_arrow" label="EJECUTAR"/>
         </div>
 
-       <q-select class="interrupcion" filled v-model="state.interrupcion" use-input input-debounce="0" label="Selecciona tu interrupción" :options="interrupciones" />
+       <q-select class="interrupcion" filled dense v-model="state.interrupcion" use-input input-debounce="0" label="Selecciona tu interrupción" :options="interrupciones" />
 
     </div>
 
@@ -19,7 +19,9 @@
 
     <div class="sec cpu">
         <div class="nombre">CPU</div>
-        <div class="content"></div>
+        <div class="content">
+          <CPU :algoritmos="algoritmos" :quantum="state.tamQuantum"/>
+        </div>
     </div>
 
     <div class="sec memoria">
@@ -32,11 +34,13 @@
 <script>
 import { reactive } from '@vue/reactivity';
 import Procesos from 'components/Procesos.vue';
+import CPU from 'components/Cpu.vue';
 
 export default {
     name: 'PageIndex',
     components: {
-        Procesos
+        Procesos,
+        CPU
     },
     setup() {
         document.title = 'Nuestro SO';
@@ -60,21 +64,29 @@ export default {
         // ESTRCUTURA DE UN PROCESO EN LA LISTA DE PROCESOS
         // 0 NEW, 1 READY, 2 RUNNING, 3 BLOCKED, 4 FINISHED
         // {
-        //     id: 1,
-        //     tiempoLlegada: 0,
-        //     cpuAsignado: 0,
-        //     envejecimiento: 0,
-        //     cpuRestante: 0,
-        //     quantum: 0,
-        //     estado: 0
+            // id: 1,
+            // tiempoLlegada: 0,
+            // cpuAsignado: 0,
+            // envejecimiento: 0,
+            // cpuRestante: 0,
+            // quantum: 0,
+            // estado: 0
         // }
 
         const state = reactive({
             algoritmo: 0,
-            tamQuantum: 0,
+            tamQuantum: 5,
             relojInterno: 0,
             interrupcion: null,
-            procesos: []
+            procesos: [{
+              id: 1,
+              tiempoLlegada: 0,
+              cpuAsignado: 10,
+              envejecimiento: 11,
+              cpuRestante: 2,
+              quantum: 5,
+              estado: 2
+            }]
         });
 
         // NO APROPIATIVO
@@ -151,11 +163,12 @@ export default {
     width: 100%;
     height: 100vh;
     display: grid;
-    grid-template-rows: 0.25fr 1fr 1fr 1fr;
+    grid-template-rows: 0.25fr auto auto 1fr;
 
     .acciones{
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 0.35rem 1rem;
 
         .interrupcion{
@@ -184,7 +197,6 @@ export default {
         .nombre{
             font-size: 1.2rem;
             font-weight: bold;
-            color: white;
         }
     }
 
