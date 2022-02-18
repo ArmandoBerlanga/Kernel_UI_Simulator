@@ -1,16 +1,43 @@
 <template>
 <q-page class="container">
-    <div class="acciones"></div>
-    <div class="procesos"></div>
-    <div class="cpu"></div>
-    <div class="memoria"></div>
+    <div class="acciones">
+        <div class="tiempo-actual">
+            <p> <span>TIEMPO ACTUAL: </span>{{ state.relojInterno }}</p>
+            <q-btn color="primary" icon="play_arrow" label="EJECUTAR"/>
+        </div>
+
+       <q-select class="interrupcion" filled v-model="state.interrupcion" use-input input-debounce="0" label="Selecciona tu interrupción" :options="interrupciones" />
+
+    </div>
+
+    <div class="sec procesos">
+        <div class="nombre">PROCESOS</div>
+        <div class="content">
+          <Procesos/>
+        </div>
+    </div>
+
+    <div class="sec cpu">
+        <div class="nombre">CPU</div>
+        <div class="content"></div>
+    </div>
+
+    <div class="sec memoria">
+        <div class="nombre">MEMOIA</div>
+        <div class="content"></div>
+    </div>
 </q-page>
 </template>
 
 <script>
 import { reactive } from '@vue/reactivity';
+import Procesos from 'components/Procesos.vue';
+
 export default {
     name: 'PageIndex',
+    components: {
+        Procesos
+    },
     setup() {
         document.title = 'Nuestro SO';
 
@@ -46,7 +73,7 @@ export default {
             algoritmo: 0,
             tamQuantum: 0,
             relojInterno: 0,
-            interrupcion: 0,
+            interrupcion: null,
             procesos: []
         });
 
@@ -72,6 +99,7 @@ export default {
             return state.procesos
                     .find(p => p.estado === 1)
                     .sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)[0];
+
         }
 
         // APROPIATIVO
@@ -91,6 +119,7 @@ export default {
             state.procesos.map(p => {
                 if(p.estado === 1 || p.estado === 2)
                     p.tiempoLlegada++;
+                return p;
             });
 
             if(state.algoritmo == 0)
@@ -114,11 +143,50 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+*{
+    margin: 0;
+}
 .container {
     width: 100%;
     height: 100vh;
     display: grid;
     grid-template-rows: 0.25fr 1fr 1fr 1fr;
+
+    .acciones{
+        display: flex;
+        justify-content: space-between;
+        padding: 0.35rem 1rem;
+
+        .interrupcion{
+            width: 25%;
+        }
+        .tiempo-actual{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            p{
+                font-size: 1.5rem;
+                span{
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+
+    .sec{
+        padding: 0.35rem 1rem;
+        display: grid;
+        gap: 0.7rem;
+        grid-template-columns: 0.1fr 1fr;
+
+        .nombre{
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+    }
 
     .procesos {
         background-color: rgb(102, 204, 204);
