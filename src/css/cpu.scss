@@ -1,0 +1,34 @@
+#cpu {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.7rem;
+
+  .scheduling,
+  .cpu-info {
+      padding: 1rem;
+      border-radius: 5px;
+      background-color: white;
+
+      .titulo {
+          font-size: 1.2rem;
+      }
+
+      .content {
+          display: flex;
+          flex-flow: column nowrap;
+          gap: 0.35rem;
+      }
+  }
+
+  .scheduling {
+      grid-column: 1/4;
+  }
+
+  .cpu-info {
+      grid-column: 4/7;
+  }
+
+  span {
+      text-decoration: underline;
+  }
+}
