@@ -3,7 +3,7 @@
     <div class="acciones">
         <div class="tiempo-actual">
             <p> <span>TIEMPO ACTUAL: </span>{{ state.relojInterno }}</p>
-            <q-btn color="primary" icon="play_arrow" label="EJECUTAR" @click="dispatch" />
+            <q-btn color="primary" icon="play_arrow" label="EJECUTAR" @click="ejecutar" />
         </div>
 
         <q-select class="interrupcion" filled dense v-model="state.interrupcion" use-input input-debounce="0" label="Selecciona tu interrupción" :options="interrupciones" />
@@ -30,10 +30,10 @@
                     </div>
                 </div>
 
-                <q-table style="height:220px" title="READY" :rows="state.rows.ready" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" />
-                <q-table style="height:220px" title="RUNNING" :rows="state.rows.running" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" />
-                <q-table style="height:220px" title="BLOCKED" :rows="state.rows.blocked" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" />
-                <q-table style="height:220px" title="FINISHED" :rows="state.rows.finished" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" />
+                <q-table style="height:220px" title="READY" :rows="state.rows.ready" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" no-data-label="Sin procesos" />
+                <q-table style="height:220px" title="RUNNING" :rows="state.rows.running" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" no-data-label="Sin procesos" />
+                <q-table style="height:220px" title="BLOCKED" :rows="state.rows.blocked" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" no-data-label="Sin procesos" />
+                <q-table style="height:220px" title="FINISHED" :rows="state.rows.finished" :columns="state.columns" row-key="index" virtual-scroll hide-header hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" no-data-label="Sin procesos" />
 
             </div>
 
@@ -63,8 +63,8 @@
                     <div class="titulo">CPU</div>
                     <div class="content">
                         <q-select v-model="state.algoritmo" label="Algoritmo" :options="algoritmos" dense filled />
-                        <q-input v-model.number="state.tamQuantum" label="Quantum" type="number" dense filled :disable="state.algoritmo.value == 0" />
-                        <q-btn color="primary" icon="save" label="GUARDAR" />
+                        <q-input v-model.number="state.tamQuantum" label="Quantum" type="number" dense filled :disable="state.algoritmo.value != 1" />
+                        <q-btn color="primary" icon="save" label="GUARDAR" @click="guardar" />
                     </div>
 
                 </div>
@@ -113,48 +113,53 @@ export default defineComponent({
             }
         ];
 
+        // poner los IH en el select de interrupciones
         const interrupciones = [{
-                label: 'SVC de solicitud de I/O',
+                label: 'SVC de solicitud de I/O', // manda el proceso a blocked, pasa el sig proceso de ready (empieza contador de espera de blocked)
                 value: 0
             },
             {
-                label: 'SVC de terminación normal',
-                value: 1
+                label: 'SVC de terminación normal', // lo mando a finished, paso el sig proceso de ready
+                value: 1,
+                disable: true // APARECE AUTOMATICAMENTE, el usuario no puede solictar esta interrupcion
             },
             {
-                label: 'SVC de solicitud de fecha',
+                label: 'SVC de solicitud de fecha', // lo mando a blocked, pasa el sig proceso de ready (empieza contador de espera de blocked)
                 value: 2
             },
             {
-                label: 'Error de programa',
+                label: 'Error de programa', // lo mando a finished, paso el sig proceso de ready
                 value: 3
             },
             {
-                label: 'Externa de quantum expirado',
-                value: 4
+                label: 'Externa de quantum expirado', // pasa a ready, pasa el sig proceso de ready
+                value: 4,
+                disable: true // APARECE AUTOMATICAMENTE, el usuario no puede solictar esta interrupcion
             },
             {
-                label: 'Dipositivo de I/O',
+                label: 'Dipositivo de I/O', // si hay algo en blocked pasa el de blocked a ready, pasa el sig proceso de ready
                 value: 5
             }
         ];
 
         const procesos = [{
                 id: 1,
-                tiempoLlegada: 0,
+                tiempoLlegada: 6,
                 cpuAsignado: 0,
                 envejecimiento: 0,
-                cpuRestante: 0,
+                cpuRestante: 4,
                 quantum: 0,
+                tiempoBlocked: 0,
                 estado: 1
             },
             {
                 id: 2,
-                tiempoLlegada: 7,
+                tiempoLlegada: 5,
                 cpuAsignado: 5,
                 envejecimiento: 12,
-                cpuRestante: 5,
+                cpuRestante: 12,
                 quantum: 0,
+                tiempoBlocked: 0,
                 estado: 2
             },
             {
@@ -162,8 +167,9 @@ export default defineComponent({
                 tiempoLlegada: 0,
                 cpuAsignado: 0,
                 envejecimiento: 0,
-                cpuRestante: 0,
+                cpuRestante: 2,
                 quantum: 0,
+                tiempoBlocked: 0,
                 estado: 3
             },
             {
@@ -171,17 +177,19 @@ export default defineComponent({
                 tiempoLlegada: 0,
                 cpuAsignado: 0,
                 envejecimiento: 0,
-                cpuRestante: 0,
+                cpuRestante: 4,
                 quantum: 0,
+                tiempoBlocked: 0,
                 estado: 4
             },
             {
                 id: 5,
-                tiempoLlegada: 0,
+                tiempoLlegada: 10,
                 cpuAsignado: 0,
-                envejecimiento: 0,
-                cpuRestante: 0,
+                envejecimiento: 10,
+                cpuRestante: 6,
                 quantum: 0,
+                tiempoBlocked: 0,
                 estado: 1
             },
             {
@@ -189,8 +197,9 @@ export default defineComponent({
                 tiempoLlegada: 0,
                 cpuAsignado: 0,
                 envejecimiento: 0,
-                cpuRestante: 0,
+                cpuRestante: 5,
                 quantum: 0,
+                tiempoBlocked: 0,
                 estado: 4
             },
             {
@@ -198,9 +207,10 @@ export default defineComponent({
                 tiempoLlegada: 0,
                 cpuAsignado: 0,
                 envejecimiento: 0,
-                cpuRestante: 0,
+                cpuRestante: 1,
                 quantum: 0,
-                estado: 3
+                tiempoBlocked: 0,
+                estado: 4
             }
         ];
 
@@ -237,24 +247,23 @@ export default defineComponent({
                 value: 0,
                 label: 'FIFO'
             },
-            tamQuantum: 5,
+            tamQuantum: 0,
             relojInterno: 0,
             interrupcion: null
         });
 
         onMounted(() => {
             state.procesoRunning = state.procesos.find(p => p.estado === 2);
-
             state.nuevo.nombre = state.procesos.length + 1;
             setProcesos();
         });
 
         function setProcesos() {
             state.rows = {
-                ready: state.procesos.filter(p => p.estado === 1),
-                running: state.procesos.filter(p => p.estado === 2),
-                blocked: state.procesos.filter(p => p.estado === 3),
-                finished: state.procesos.filter(p => p.estado === 4)
+                ready: state.procesos.filter(p => p.estado === 1).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
+                running: state.procesos.filter(p => p.estado === 2).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
+                blocked: state.procesos.filter(p => p.estado === 3).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
+                finished: state.procesos.filter(p => p.estado === 4).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)
             }
         }
 
@@ -266,11 +275,26 @@ export default defineComponent({
                 envejecimiento: 0,
                 cpuRestante: state.nuevo.ejecTotal,
                 quantum: state.tamQuantum,
+                tiempoBlocked: 0,
                 estado: 1
             };
 
-            state.procesos.push(proceso);
-            state.rows.ready.push(proceso);
+            state.rows.ready.sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
+
+            if (state.algoritmo.value === 2 && (state.procesoRunning.cpuRestante > proceso.cpuRestante)) { // veo si tiene menos cpuRestante
+
+                state.rows.running.map(p => p.estado = 1);
+                state.rows.ready.push(state.rows.running.pop());
+
+                proceso.estado = 2;
+                state.procesoRunning = proceso;
+                state.rows.running.push(proceso);
+
+                state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+            } else {
+                state.procesos.push(proceso);
+                state.rows.ready.push(proceso);
+            }
         }
 
         function addProcesos() {
@@ -291,13 +315,12 @@ export default defineComponent({
 
         // NO APROPIATIVO
         // SEGUN YO YA QUEDO ESTE, NADA MAS FALTA LO DE LOS IH
-        function dispathFIFO() {
+        function ejecutarFIFO() {
 
-            let running = state.procesos.find(p => p.estado === 2);
+            let running = state.rows.running.find(p => p.estado === 2);
 
-            if (running && running.cpuRestante > 0) {
+            if (running && running.cpuRestante > 1) {
                 running.cpuRestante--;
-                running.envejecimiento++;
                 running.cpuAsignado++;
             } else {
                 running.cpuRestante = 0;
@@ -308,11 +331,10 @@ export default defineComponent({
                 state.rows.finished.push(running);
             }
 
-            if (state.procesos.find(p => p.estado === 2))
+            if (state.rows.running.find(p => p.estado === 2))
                 return;
 
-            let ready = state.procesos.filter(p => p.estado === 1)
-                .sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)[0];
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
 
             ready.estado = 2;
             state.procesoRunning = ready;
@@ -321,37 +343,191 @@ export default defineComponent({
         }
 
         // APROPIATIVO
-        function dispathRR() {}
+        function ejecutarRR() {
 
-        // APROPIATIVO
-        function dispathSRT() {}
+            let running = state.rows.running.find(p => p.estado === 2);
 
-        // APROPIATIVO
-        function dispathHRRN() {}
+            if (running && running.quantum > 1 && running.cpuRestante > 1) {
+                console.log('entro1');
+                running.quantum--;
+                running.cpuRestante--;
+                running.cpuAsignado++;
+            } else {
+                if (running.cpuRestante <= 1) {
+                    console.log('entro2');
+                    running.cpuRestante = 0;
+                    running.quantum = 0;
+                    running.envejecimiento = 0;
+                    running.cpuAsignado = 0;
+                    running.estado = 4;
+                    state.rows.running.pop();
+                    state.rows.finished.push(running);
+                } else {
+                    console.log('entro3');
+                    running.cpuRestante--;
+                    running.quantum = state.tamQuantum;
+                    running.estado = 1;
+                    state.rows.running.pop();
+                    state.rows.ready.push(running);
+                }
+            }
 
-        function dispatch() {
+            // console.log(running.quantum, running.cpuRestante);
+            if (state.rows.running.find(p => p.estado === 2))
+                return;
+
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+        }
+
+        // NO APROPIATIVO
+        function ejecutarSRT() {
+
+            // console.log(state.rows.ready);
+            // ejec total - ejec actual
+            state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+
+            let running = state.rows.running.find(p => p.estado === 2);
+
+            if (running && running.cpuRestante > 1) {
+                running.cpuRestante--;
+                running.cpuAsignado++;
+            } else {
+                running.cpuRestante = 0;
+                running.envejecimiento = 0;
+                running.cpuAsignado = 0;
+                running.estado = 4;
+                state.rows.running.pop();
+                state.rows.finished.push(running);
+                // console.log(state.rows.ready);
+            }
+
+            if (state.rows.running.find(p => p.estado === 2))
+                return;
+
+            // console.log(state.rows.ready);
+            let ready = state.rows.ready.filter(p => p.estado === 1).sort((a, b) => a.cpuRestante - b.cpuRestante)[0];
+            // console.log(ready);
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+
+        }
+
+        // NO APROPIATIVO
+        function ejecutarHRRN() {
+
+            // prioridad = (tiempoEspera + tiempoServicio / tiempoServicio)
+            // prioridad = (envejecimiento + (cpuAsignado + cpuRestante)) / (cpuAsignado + cpuRestante))
+            state.rows.ready.sort((a, b) => {
+                let prioridadA = (a.envejecimiento + (a.cpuAsignado + a.cpuRestante)) / (a.cpuAsignado + a.cpuRestante);
+                let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
+                return prioridadB - prioridadA;
+            });
+
+            // console.log(state.rows.ready);
+
+            let running = state.rows.running.find(p => p.estado === 2);
+
+            if (running && running.cpuRestante > 1) {
+                running.cpuRestante--;
+                running.cpuAsignado++;
+            } else {
+                running.cpuRestante = 0;
+                running.envejecimiento = 0;
+                running.cpuAsignado = 0;
+                running.estado = 4;
+                state.rows.running.pop();
+                state.rows.finished.push(running);
+            }
+
+            if (state.rows.running.find(p => p.estado === 2))
+                return;
+
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+
+        }
+
+        function listenerBlocked(id) {
+
+            state.rows.running.map(p => p.estado = 1);
+            state.rows.ready.push(state.rows.running.pop());
+
+            state.rows.blocked.map(p => {
+                if (p.id == id)
+                    p.estado = 1
+            });
+
+            state.rows.ready.push(state.rows.blocked.pop());
+
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+        }
+
+        function ejecutar() {
             state.relojInterno++;
             state.procesos.map(p => {
-                if (p.estado === 1 || p.estado === 2)
-                    p.tiempoLlegada++;
+                if (p.estado === 1)
+                    p.envejecimiento++;
+                if (p.estado === 3)
+                    p.tiempoBlocked++;
                 return p;
             });
 
-            if (state.algoritmo.value == 0)
-                dispathFIFO();
-            else if (state.algoritmo.value == 1)
-                dispathRR();
-            else if (state.algoritmo.value == 2)
-                dispathSRT();
-            else if (state.algoritmo.value == 3)
-                dispathHRRN();
+            state.procesos.forEach(p => {
+                if (p.tiempoBlocked >= 5)
+                    listenerBlocked(p.id);
+            });
+
+            // hacer IH
+
+            switch (state.algoritmo.value) {
+                case 0:
+                    ejecutarFIFO();
+                    break;
+                case 1:
+                    ejecutarRR();
+                    break;
+                case 2:
+                    ejecutarSRT();
+                    break;
+                case 3:
+                    ejecutarHRRN();
+                    break;
+            }
+        }
+
+        function guardar() {
+
+            if (state.algoritmo.value == 1) {
+                state.procesos.map(p => {
+                    p.quantum = state.tamQuantum;
+                    return p;
+                });
+            }
         }
 
         return {
             state,
             algoritmos,
             interrupciones,
-            dispatch,
+            ejecutar,
+            guardar,
             addProceso,
             addProcesos,
             pagination: {
