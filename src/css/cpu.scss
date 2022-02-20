@@ -1,7 +1,7 @@
 #cpu {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 0.7rem;
+  gap: 1rem;
 
   .scheduling,
   .cpu-info {
