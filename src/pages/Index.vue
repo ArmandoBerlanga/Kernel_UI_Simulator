@@ -89,10 +89,12 @@ import {
     reactive
 } from '@vue/reactivity';
 import {
+    useQuasar
+} from "quasar";
+import {
     defineComponent,
     onMounted
 } from '@vue/runtime-core';
-import { colors, useQuasar } from "quasar";
 
 export default defineComponent({
     name: 'PageIndex',
@@ -120,7 +122,6 @@ export default defineComponent({
             }
         ];
 
-        // poner los IH en el select de interrupciones
         const interrupciones = [{
                 label: 'SVC de solicitud de I/O', // manda el proceso a blocked, pasa el sig proceso de ready (empieza contador de espera de blocked)
                 value: 0
@@ -312,7 +313,6 @@ export default defineComponent({
         }
 
         async function addProcesos() {
-
             state.nuevo.nombre = 1;
             state.procesos = [];
             state.rows.ready = [];
@@ -653,8 +653,10 @@ export default defineComponent({
         function ejecutar() {
             state.relojInterno++;
             state.procesos.map(p => {
-                if (p.estado === 1)
+                if (p.estado === 1) {
                     p.envejecimiento++;
+                    p.quantum = state.tamQuantum;
+                }
                 if (p.estado === 3)
                     p.tiempoBlocked++;
                 return p;
@@ -669,7 +671,7 @@ export default defineComponent({
                 }
 
             if (bool) {
-                if (state.interrupcion != null){
+                if (state.interrupcion != null) {
                     switch (state.interrupcion.value) {
 
                         case 0:
@@ -692,8 +694,7 @@ export default defineComponent({
                             break;
                     }
                     state.interrupcion = null;
-                }
-                else{
+                } else {
                     switch (state.algoritmo.value) {
                         case 0:
                             ejecutarFIFO();
