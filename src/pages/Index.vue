@@ -24,7 +24,8 @@
 
                         <div class="botones">
                             <q-btn color="primary" dense icon="add" @click="addProceso" />
-                            <input type="file" ref="doc" @change="readFile()" />
+                            <q-btn id="btn" color="primary" dense icon="upload" />
+                            <input id="input-file" type="file" ref="doc" @change="addProcesos" style="display: none;" />
                         </div>
 
                     </div>
@@ -82,13 +83,16 @@
 
 <script>
 import {
+    ref
+} from "vue";
+import {
     reactive
 } from '@vue/reactivity';
 import {
     defineComponent,
-    onMounted 
+    onMounted
 } from '@vue/runtime-core';
-import { ref } from "vue";
+import { colors, useQuasar } from "quasar";
 
 export default defineComponent({
     name: 'PageIndex',
@@ -96,8 +100,8 @@ export default defineComponent({
     setup() {
         document.title = 'Nuestro SO';
 
-        const doc = ref(null);
-        
+        const $q = useQuasar();
+
         const algoritmos = [{
                 label: 'FIFO',
                 value: 0
@@ -123,8 +127,7 @@ export default defineComponent({
             },
             {
                 label: 'SVC de terminación normal', // lo mando a finished, paso el sig proceso de ready
-                value: 1,
-                disable: true // APARECE AUTOMATICAMENTE, el usuario no puede solictar esta interrupcion
+                value: 1 // APARECE AUTOMATICAMENTE, el usuario no puede solictar esta interrupcion
             },
             {
                 label: 'SVC de solicitud de fecha', // lo mando a blocked, pasa el sig proceso de ready (empieza contador de espera de blocked)
@@ -136,8 +139,7 @@ export default defineComponent({
             },
             {
                 label: 'Externa de quantum expirado', // pasa a ready, pasa el sig proceso de ready
-                value: 4,
-                disable: true // APARECE AUTOMATICAMENTE, el usuario no puede solictar esta interrupcion
+                value: 4 // APARECE AUTOMATICAMENTE, el usuario no puede solictar esta interrupcion
             },
             {
                 label: 'Dipositivo de I/O', // si hay algo en blocked pasa el de blocked a ready, pasa el sig proceso de ready
@@ -228,6 +230,7 @@ export default defineComponent({
 
         let rows = [];
 
+        const doc = ref(null);
         const state = reactive({
             procesoRunning: {
                 id: 0,
@@ -259,6 +262,11 @@ export default defineComponent({
         });
 
         onMounted(() => {
+            let input = document.getElementById("input-file");
+            let btn = document.getElementById("btn");
+
+            btn.onclick = () => input.click();
+
             state.procesoRunning = state.procesos.find(p => p.estado === 2);
             state.nuevo.nombre = state.procesos.length + 1;
             setProcesos();
@@ -303,29 +311,75 @@ export default defineComponent({
             }
         }
 
-        function addProcesos() {
-            // txt
+        async function addProcesos() {
+
+            state.nuevo.nombre = 1;
+            state.procesos = [];
+            state.rows.ready = [];
+            state.rows.running = [];
+            state.rows.blocked = [];
+            state.rows.finished = [];
+
+            state.file = doc.value.files[0];
+            const reader = new FileReader();
+            if (state.file.name.includes(".txt")) {
+                reader.onload = async (res) => {
+                    state.contenidoFile = res.target.result;
+
+                    state.contenidoFile = state.contenidoFile.replaceAll("\n", ",");
+                    state.contenidoFile = state.contenidoFile.split(",").map(c => parseInt(c));
+
+                    state.numPaginas = state.contenidoFile[0];
+                    state.relojInterno = state.contenidoFile[1];
+                    for (let i = 3; i < state.contenidoFile.length; i++) {
+
+                        let proceso = {
+                            id: state.nuevo.nombre++,
+                            tiempoLlegada: state.contenidoFile[i],
+                            cpuAsignado: 0,
+                            envejecimiento: 0,
+                            cpuRestante: state.contenidoFile[i + 1],
+                            quantum: state.tamQuantum,
+                            tiempoBlocked: 0,
+                            estado: state.contenidoFile[i + 2]
+                        }
+
+                        state.procesos.push(proceso);
+
+                        switch (proceso.estado) {
+                            case 1:
+                                state.rows.ready.push(proceso);
+                                break;
+                            case 2:
+                                state.rows.running.push(proceso);
+                                state.procesoRunning = proceso;
+                                break;
+                            case 3:
+                                state.rows.blocked.push(proceso);
+                                break;
+                        }
+                        let numPaginas = state.contenidoFile[i + 3];
+
+                        i += (numPaginas * 6 + 3);
+                    }
+                };
+                reader.onerror = (err) => console.log(err);
+                reader.readAsText(state.file);
+            } else {
+                state.contenidoFile = "check the console for file output";
+                reader.onload = (res) => {};
+                reader.onerror = (err) => console.log(err);
+                reader.readAsText(state.file);
+            }
+
         }
 
-        // ESTRCUTURA DE UN PROCESO EN LA LISTA DE PROCESOS
-        // 0 NEW, 1 READY, 2 RUNNING, 3 BLOCKED, 4 FINISHED
-        // {
-        // id: 1,
-        // tiempoLlegada: 0,
-        // cpuAsignado: 0,
-        // envejecimiento: 0,
-        // cpuRestante: 0,
-        // quantum: 0,
-        // estado: 0
-        // }
-
         // NO APROPIATIVO
-        // SEGUN YO YA QUEDO ESTE, NADA MAS FALTA LO DE LOS IH
         function ejecutarFIFO() {
 
             let running = state.rows.running.find(p => p.estado === 2);
 
-            if (running && running.cpuRestante > 1) {
+            if (running.cpuRestante > 1) {
                 running.cpuRestante--;
                 running.cpuAsignado++;
             } else {
@@ -354,13 +408,11 @@ export default defineComponent({
             let running = state.rows.running.find(p => p.estado === 2);
 
             if (running && running.quantum > 1 && running.cpuRestante > 1) {
-                console.log('entro1');
                 running.quantum--;
                 running.cpuRestante--;
                 running.cpuAsignado++;
             } else {
                 if (running.cpuRestante <= 1) {
-                    console.log('entro2');
                     running.cpuRestante = 0;
                     running.quantum = 0;
                     running.envejecimiento = 0;
@@ -369,7 +421,6 @@ export default defineComponent({
                     state.rows.running.pop();
                     state.rows.finished.push(running);
                 } else {
-                    console.log('entro3');
                     running.cpuRestante--;
                     running.quantum = state.tamQuantum;
                     running.estado = 1;
@@ -416,7 +467,7 @@ export default defineComponent({
                 return;
 
             // console.log(state.rows.ready);
-            let ready = state.rows.ready.filter(p => p.estado === 1).sort((a, b) => a.cpuRestante - b.cpuRestante)[0];
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
             // console.log(ready);
 
             ready.estado = 2;
@@ -465,17 +516,29 @@ export default defineComponent({
 
         }
 
-        function listenerBlocked(id) {
+        function intrDispositivoIO(id) {
 
-            state.rows.running.map(p => p.estado = 1);
-            state.rows.ready.push(state.rows.running.pop());
+            let running = state.rows.running.find(p => p.estado === 2);
+
+            if (running.cpuRestante > 1) {
+                state.rows.running.map(p => p.estado = 1);
+                state.rows.ready.push(state.rows.running.pop());
+            } else {
+                state.rows.running.map(p => p.estado = 4);
+                state.rows.finished.push(state.rows.running.pop());
+            }
 
             state.rows.blocked.map(p => {
-                if (p.id == id)
+                if (p.id == id) {
                     p.estado = 1
+                    p.tiempoBlocked = 0;
+                }
+                return p;
             });
 
-            state.rows.ready.push(state.rows.blocked.pop());
+            // console.log(state.rows.blocked.shift())
+            state.rows.ready.push(state.rows.blocked.shift());
+            // console.log(state.rows);
 
             let ready = state.rows.ready.filter(p => p.estado === 1)[0];
 
@@ -483,6 +546,108 @@ export default defineComponent({
             state.procesoRunning = ready;
             state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
             state.rows.running.push(ready);
+            // console.log(state.rows);
+
+        }
+
+        function intrSVCdeSolicitudIO() {
+            // manda el proceso a blocked, pasa el sig proceso de ready (empieza contador de espera de blocked)
+            state.rows.running.map(p => p.estado = 3);
+            state.rows.blocked.push(state.rows.running.pop());
+
+            // console.log(ready);
+
+            switch (state.algoritmo.value) {
+                case 2:
+                    state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+                    break;
+                case 3:
+                    state.rows.ready.sort((a, b) => {
+                        let prioridadA = (a.envejecimiento + (a.cpuAsignado + a.cpuRestante)) / (a.cpuAsignado + a.cpuRestante);
+                        let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
+                        return prioridadB - prioridadA;
+                    });
+                    break;
+            }
+
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+        }
+
+        function intrTerminacionNormal() {
+
+            state.rows.running.map(p => p.estado = 4);
+            state.rows.finished.push(state.rows.running.pop());
+
+            // console.log(ready);
+
+            switch (state.algoritmo.value) {
+                case 2:
+                    state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+                    break;
+                case 3:
+                    state.rows.ready.sort((a, b) => {
+                        let prioridadA = (a.envejecimiento + (a.cpuAsignado + a.cpuRestante)) / (a.cpuAsignado + a.cpuRestante);
+                        let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
+                        return prioridadB - prioridadA;
+                    });
+                    break;
+            }
+
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+        }
+
+        function intrQuantumExpirado() {
+            // pasa a ready, pasa el sig proceso de ready
+
+            state.rows.running.map(p => p.estado = 1);
+            state.rows.ready.push(state.rows.running.pop());
+
+            // console.log(ready);
+
+            switch (state.algoritmo.value) {
+                case 2:
+                    state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+                    break;
+                case 3:
+                    state.rows.ready.sort((a, b) => {
+                        let prioridadA = (a.envejecimiento + (a.cpuAsignado + a.cpuRestante)) / (a.cpuAsignado + a.cpuRestante);
+                        let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
+                        return prioridadB - prioridadA;
+                    });
+                    break;
+            }
+
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+        }
+
+        function intrErrorDePrograma() {
+            intrTerminacionNormal();
+
+            $q.notify({
+                message: 'Error de programa',
+                type: 'danger',
+                position: 'top',
+                color: 'red'
+            });
+        }
+
+        function intrSVCdeSolicitudDeFecha() {
+            intrSVCdeSolicitudIO();
         }
 
         function ejecutar() {
@@ -495,101 +660,67 @@ export default defineComponent({
                 return p;
             });
 
-            state.procesos.forEach(p => {
-                // if (p.tiempoBlocked >= 5)
-                //     listenerBlocked(p.id);
-            });
+            let bool = true;
+            for (let i = 0; i < state.rows.blocked.length; i++)
+                if (state.rows.blocked[i].tiempoBlocked >= 5) {
+                    intrDispositivoIO(state.rows.blocked[i].id);
+                    bool = false;
+                    break;
+                }
 
-            // hacer IH
+            if (bool) {
+                if (state.interrupcion != null){
+                    switch (state.interrupcion.value) {
 
-            switch (state.algoritmo.value) {
-                case 0:
-                    ejecutarFIFO();
-                    break;
-                case 1:
-                    ejecutarRR();
-                    break;
-                case 2:
-                    ejecutarSRT();
-                    break;
-                case 3:
-                    ejecutarHRRN();
-                    break;
+                        case 0:
+                            intrSVCdeSolicitudIO(); //DONE
+                            break;
+                        case 1:
+                            intrTerminacionNormal();
+                            break;
+                        case 2:
+                            intrSVCdeSolicitudDeFecha(); //done
+                            break;
+                        case 3:
+                            intrErrorDePrograma();
+                            break;
+                        case 4:
+                            intrQuantumExpirado();
+                            break;
+                        case 5:
+                            intrDispositivoIO(state.rows.blocked[0].id); // DONE
+                            break;
+                    }
+                    state.interrupcion = null;
+                }
+                else{
+                    switch (state.algoritmo.value) {
+                        case 0:
+                            ejecutarFIFO();
+                            break;
+                        case 1:
+                            ejecutarRR();
+                            break;
+                        case 2:
+                            ejecutarSRT();
+                            break;
+                        case 3:
+                            ejecutarHRRN();
+                            break;
+                    }
+                }
+
             }
         }
 
         function guardar() {
-
-            if (state.algoritmo.value == 1) {
+            if (state.algoritmo.value == 1)
                 state.procesos.map(p => {
                     p.quantum = state.tamQuantum;
                     return p;
                 });
-            }
         }
 
-        async function readFile() {
-            
-            state.nuevo.nombre = 1;
-            state.procesos = [];
-            state.rows.ready = [];
-            state.rows.running = [];
-            state.rows.blocked = [];
-            state.rows.finished = [];
-
-            state.file = doc.value.files[0];
-            const reader = new FileReader();
-            if (state.file.name.includes(".txt")) {
-                reader.onload = async (res) => {
-                    state.contenidoFile = res.target.result;
-                    // state.rows.ready[0].id = res.target.result;
-                    // console.log(state.contenidoFile.split(",").map(c=>c.substring(0,c.indexOf("\\"))));
-                    state.contenidoFile = state.contenidoFile.replaceAll("\n",",");
-                    state.contenidoFile = state.contenidoFile.split(",").map(c=>parseInt(c));
-                    // console.log(state.contenidoFile);
-                    state.numPaginas = state.contenidoFile[0];
-                    state.relojInterno = state.contenidoFile[1];
-                    for (let i = 3; i < state.contenidoFile.length; i++) {
-                        // console.log(i)
-                        let proceso = {
-                            id: state.nuevo.nombre++,
-                            tiempoLlegada: state.contenidoFile[i],
-                            cpuAsignado: 0,
-                            envejecimiento: 0,
-                            cpuRestante: state.contenidoFile[i+1],
-                            quantum: state.tamQuantum,
-                            tiempoBlocked: 0,
-                            estado: state.contenidoFile[i+2]
-                        }
-                        // console.log(proceso)
-                        state.procesos.push(proceso);
-                        
-                        switch(proceso.estado) {
-                            case 1: state.rows.ready.push(proceso);
-                            break;
-                            case 2: 
-                            state.rows.running.push(proceso);
-                            state.procesoRunning = proceso;
-                            break;
-                            case 3: state.rows.blocked.push(proceso);
-                            break;
-                        }
-                        let numPaginas = state.contenidoFile[i+3];
-                        //Nos saltamos las páginas
-                        i+=(numPaginas*6+3);
-                    }
-                };
-                reader.onerror = (err) => console.log(err);
-                reader.readAsText(state.file);
-            } else {
-                state.contenidoFile = "check the console for file output";
-                reader.onload = (res) => {
-                };
-                reader.onerror = (err) => console.log(err);
-                reader.readAsText(state.file);
-            }
-        }
-      
         return {
             state,
             algoritmos,
@@ -598,7 +729,6 @@ export default defineComponent({
             guardar,
             addProceso,
             addProcesos,
-            readFile,
             doc,
             pagination: {
                 rowsPerPage: 0
