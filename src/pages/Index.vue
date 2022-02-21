@@ -51,7 +51,7 @@
                     <div class="titulo">SCHEDULING</div>
                     <div class="info">
                         <p><span>Nombre: </span>{{ state.procesoRunning.id }}</p>
-                        <p><span>Tmpo Llegada: </span>{{ state.procesoRunning.tiempoLlegada }}</p>
+                        <p><span>Tiempo Llegada: </span>{{ state.procesoRunning.tiempoLlegada }}</p>
                         <p><span>CPU Asignado: </span>{{ state.procesoRunning.cpuAsignado }}</p>
                         <p><span>Envejecimiento: </span>{{ state.procesoRunning.envejecimiento }}</p>
                         <p><span>CPU Restante: </span>{{ state.procesoRunning.cpuRestante }}</p>
@@ -207,16 +207,6 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 estado: 4
-            },
-            {
-                id: 7,
-                tiempoLlegada: 0,
-                cpuAsignado: 0,
-                envejecimiento: 0,
-                cpuRestante: 1,
-                quantum: 0,
-                tiempoBlocked: 0,
-                estado: 4
             }
         ];
 
@@ -304,8 +294,18 @@ export default defineComponent({
                 proceso.estado = 2;
                 state.procesoRunning = proceso;
                 state.rows.running.push(proceso);
-
+                state.procesos.push(proceso); 
+                
                 state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+        
+            } else if (state.algoritmo.value === 3) {
+                state.procesos.push(proceso);
+                state.rows.ready.push(proceso);
+                state.rows.ready.sort((a, b) => {
+                    let prioridadA = (a.envejecimiento + (a.cpuAsignado + a.cpuRestante)) / (a.cpuAsignado + a.cpuRestante);
+                    let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
+                    return prioridadB - prioridadA;
+                });
             } else {
                 state.procesos.push(proceso);
                 state.rows.ready.push(proceso);
