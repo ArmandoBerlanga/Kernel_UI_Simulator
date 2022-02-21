@@ -24,7 +24,7 @@
 
                         <div class="botones">
                             <q-btn color="primary" dense icon="add" @click="addProceso" />
-                            <q-btn color="primary" dense icon="upload" @click="addProcesos" />
+                            <input type="file" ref="doc" @change="readFile()" />
                         </div>
 
                     </div>
@@ -86,8 +86,9 @@ import {
 } from '@vue/reactivity';
 import {
     defineComponent,
-    onMounted
+    onMounted 
 } from '@vue/runtime-core';
+import { ref } from "vue";
 
 export default defineComponent({
     name: 'PageIndex',
@@ -95,6 +96,8 @@ export default defineComponent({
     setup() {
         document.title = 'Nuestro SO';
 
+        const doc = ref(null);
+        
         const algoritmos = [{
                 label: 'FIFO',
                 value: 0
@@ -249,7 +252,10 @@ export default defineComponent({
             },
             tamQuantum: 0,
             relojInterno: 0,
-            interrupcion: null
+            numPaginas: 0,
+            interrupcion: null,
+            file: null,
+            contenidoFile: null
         });
 
         onMounted(() => {
@@ -490,8 +496,8 @@ export default defineComponent({
             });
 
             state.procesos.forEach(p => {
-                if (p.tiempoBlocked >= 5)
-                    listenerBlocked(p.id);
+                // if (p.tiempoBlocked >= 5)
+                //     listenerBlocked(p.id);
             });
 
             // hacer IH
@@ -522,6 +528,68 @@ export default defineComponent({
             }
         }
 
+        async function readFile() {
+            
+            state.nuevo.nombre = 1;
+            state.procesos = [];
+            state.rows.ready = [];
+            state.rows.running = [];
+            state.rows.blocked = [];
+            state.rows.finished = [];
+
+            state.file = doc.value.files[0];
+            const reader = new FileReader();
+            if (state.file.name.includes(".txt")) {
+                reader.onload = async (res) => {
+                    state.contenidoFile = res.target.result;
+                    // state.rows.ready[0].id = res.target.result;
+                    // console.log(state.contenidoFile.split(",").map(c=>c.substring(0,c.indexOf("\\"))));
+                    state.contenidoFile = state.contenidoFile.replaceAll("\n",",");
+                    state.contenidoFile = state.contenidoFile.split(",").map(c=>parseInt(c));
+                    // console.log(state.contenidoFile);
+                    state.numPaginas = state.contenidoFile[0];
+                    state.relojInterno = state.contenidoFile[1];
+                    for (let i = 3; i < state.contenidoFile.length; i++) {
+                        // console.log(i)
+                        let proceso = {
+                            id: state.nuevo.nombre++,
+                            tiempoLlegada: state.contenidoFile[i],
+                            cpuAsignado: 0,
+                            envejecimiento: 0,
+                            cpuRestante: state.contenidoFile[i+1],
+                            quantum: state.tamQuantum,
+                            tiempoBlocked: 0,
+                            estado: state.contenidoFile[i+2]
+                        }
+                        // console.log(proceso)
+                        state.procesos.push(proceso);
+                        
+                        switch(proceso.estado) {
+                            case 1: state.rows.ready.push(proceso);
+                            break;
+                            case 2: 
+                            state.rows.running.push(proceso);
+                            state.procesoRunning = proceso;
+                            break;
+                            case 3: state.rows.blocked.push(proceso);
+                            break;
+                        }
+                        let numPaginas = state.contenidoFile[i+3];
+                        //Nos saltamos las páginas
+                        i+=(numPaginas*6+3);
+                    }
+                };
+                reader.onerror = (err) => console.log(err);
+                reader.readAsText(state.file);
+            } else {
+                state.contenidoFile = "check the console for file output";
+                reader.onload = (res) => {
+                };
+                reader.onerror = (err) => console.log(err);
+                reader.readAsText(state.file);
+            }
+        }
+      
         return {
             state,
             algoritmos,
@@ -530,6 +598,8 @@ export default defineComponent({
             guardar,
             addProceso,
             addProcesos,
+            readFile,
+            doc,
             pagination: {
                 rowsPerPage: 0
             }
