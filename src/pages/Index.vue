@@ -219,8 +219,6 @@ export default defineComponent({
             sortable: false,
         }]
 
-        let rows = [];
-
         const doc = ref(null);
         const state = reactive({
             procesoRunning: {
@@ -234,7 +232,12 @@ export default defineComponent({
             },
             procesos: procesos,
             columns: columns,
-            rows: rows,
+            rows: {
+                ready: [],
+                running: [],
+                blocked: [],
+                finished: []
+            },
             nuevo: {
                 nombre: 0,
                 paginas: 0,
@@ -260,17 +263,14 @@ export default defineComponent({
 
             state.procesoRunning = state.procesos.find(p => p.estado === 2);
             state.nuevo.nombre = state.procesos.length + 1;
-            setProcesos();
-        });
 
-        function setProcesos() {
             state.rows = {
                 ready: state.procesos.filter(p => p.estado === 1).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
                 running: state.procesos.filter(p => p.estado === 2).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
                 blocked: state.procesos.filter(p => p.estado === 3).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
                 finished: state.procesos.filter(p => p.estado === 4).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)
             }
-        }
+        });
 
         function addProceso() {
             let proceso = {
@@ -294,10 +294,10 @@ export default defineComponent({
                 proceso.estado = 2;
                 state.procesoRunning = proceso;
                 state.rows.running.push(proceso);
-                state.procesos.push(proceso); 
-                
+                state.procesos.push(proceso);
+
                 state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
-        
+
             } else if (state.algoritmo.value === 3) {
                 state.procesos.push(proceso);
                 state.rows.ready.push(proceso);
@@ -374,10 +374,23 @@ export default defineComponent({
 
         }
 
+        function dispatch() {
+            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
+            if (!ready)
+                return;
+
+            ready.estado = 2;
+            state.procesoRunning = ready;
+            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
+            state.rows.running.push(ready);
+        }
+
         // NO APROPIATIVO
         function ejecutarFIFO() {
 
             let running = state.rows.running.find(p => p.estado === 2);
+            if (!running)
+                return;
 
             if (running.cpuRestante > 1) {
                 running.cpuRestante--;
@@ -394,18 +407,15 @@ export default defineComponent({
             if (state.rows.running.find(p => p.estado === 2))
                 return;
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
+            dispatch();
         }
 
         // APROPIATIVO
         function ejecutarRR() {
 
             let running = state.rows.running.find(p => p.estado === 2);
+            if (!running)
+                return;
 
             if (running && running.quantum > 1 && running.cpuRestante > 1) {
                 running.quantum--;
@@ -433,12 +443,7 @@ export default defineComponent({
             if (state.rows.running.find(p => p.estado === 2))
                 return;
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
+            dispatch();
         }
 
         // NO APROPIATIVO
@@ -449,6 +454,8 @@ export default defineComponent({
             state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
 
             let running = state.rows.running.find(p => p.estado === 2);
+            if (!running)
+                return;
 
             if (running && running.cpuRestante > 1) {
                 running.cpuRestante--;
@@ -466,15 +473,7 @@ export default defineComponent({
             if (state.rows.running.find(p => p.estado === 2))
                 return;
 
-            // console.log(state.rows.ready);
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-            // console.log(ready);
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
-
+            dispatch();
         }
 
         // NO APROPIATIVO
@@ -488,9 +487,9 @@ export default defineComponent({
                 return prioridadB - prioridadA;
             });
 
-            // console.log(state.rows.ready);
-
             let running = state.rows.running.find(p => p.estado === 2);
+            if (!running)
+                return;
 
             if (running && running.cpuRestante > 1) {
                 running.cpuRestante--;
@@ -507,23 +506,19 @@ export default defineComponent({
             if (state.rows.running.find(p => p.estado === 2))
                 return;
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
-
+            dispatch();
         }
+
+        // INTERRUPCIONES
 
         function intrDispositivoIO(id) {
 
             let running = state.rows.running.find(p => p.estado === 2);
 
-            if (running.cpuRestante > 1) {
+            if (running && running.cpuRestante > 1) {
                 state.rows.running.map(p => p.estado = 1);
                 state.rows.ready.push(state.rows.running.pop());
-            } else {
+            } else if (running) {
                 state.rows.running.map(p => p.estado = 4);
                 state.rows.finished.push(state.rows.running.pop());
             }
@@ -536,18 +531,9 @@ export default defineComponent({
                 return p;
             });
 
-            // console.log(state.rows.blocked.shift())
             state.rows.ready.push(state.rows.blocked.shift());
-            // console.log(state.rows);
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
-            // console.log(state.rows);
-
+            dispatch();
         }
 
         function intrSVCdeSolicitudIO() {
@@ -570,12 +556,7 @@ export default defineComponent({
                     break;
             }
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
+            dispatch();
         }
 
         function intrTerminacionNormal() {
@@ -598,12 +579,7 @@ export default defineComponent({
                     break;
             }
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
+            dispatch();
         }
 
         function intrQuantumExpirado() {
@@ -627,12 +603,7 @@ export default defineComponent({
                     break;
             }
 
-            let ready = state.rows.ready.filter(p => p.estado === 1)[0];
-
-            ready.estado = 2;
-            state.procesoRunning = ready;
-            state.rows.ready.splice(state.rows.ready.indexOf(ready), 1);
-            state.rows.running.push(ready);
+            dispatch();
         }
 
         function intrErrorDePrograma() {
@@ -671,9 +642,8 @@ export default defineComponent({
                 }
 
             if (bool) {
-                if (state.interrupcion != null) {
+                if (state.interrupcion != null && state.rows.running[0]) {
                     switch (state.interrupcion.value) {
-
                         case 0:
                             intrSVCdeSolicitudIO(); //DONE
                             break;
@@ -693,7 +663,7 @@ export default defineComponent({
                             intrDispositivoIO(state.rows.blocked[0].id); // DONE
                             break;
                     }
-                    state.interrupcion = null;
+
                 } else {
                     switch (state.algoritmo.value) {
                         case 0:
@@ -710,8 +680,8 @@ export default defineComponent({
                             break;
                     }
                 }
-
             }
+            state.interrupcion = null;
         }
 
         function guardar() {
