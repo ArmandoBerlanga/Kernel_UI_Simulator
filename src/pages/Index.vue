@@ -533,7 +533,7 @@ export default defineComponent({
                 return prioridadB - prioridadA;
             });
 
-            // console.log(state.rows.ready.flatMap(p => (p.envejecimiento + (p.cpuAsignado + p.cpuRestante)) / (p.cpuAsignado + p.cpuRestante)));
+            console.log(state.rows.ready.flatMap(p => (p.envejecimiento + (p.cpuAsignado + p.cpuRestante)) / (p.cpuAsignado + p.cpuRestante)));
 
             let running = state.rows.running.find(p => p.estado === 2);
             if (!running)
