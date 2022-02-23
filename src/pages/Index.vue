@@ -487,6 +487,8 @@ export default defineComponent({
                 return prioridadB - prioridadA;
             });
 
+            // console.log(state.rows.ready.flatMap(p => (p.envejecimiento + (p.cpuAsignado + p.cpuRestante)) / (p.cpuAsignado + p.cpuRestante)));
+
             let running = state.rows.running.find(p => p.estado === 2);
             if (!running)
                 return;
@@ -637,12 +639,12 @@ export default defineComponent({
             for (let i = 0; i < state.rows.blocked.length; i++)
                 if (state.rows.blocked[i].tiempoBlocked >= 5) {
                     intrDispositivoIO(state.rows.blocked[i].id);
-                    bool = false;
-                    break;
+                    // bool = false;
+                    // break;
                 }
 
             if (bool) {
-                if (state.interrupcion != null && state.rows.running[0]) {
+                if (state.interrupcion != null && (state.rows.running[0] || state.rows.blocked)) {
                     switch (state.interrupcion.value) {
                         case 0:
                             intrSVCdeSolicitudIO(); //DONE
