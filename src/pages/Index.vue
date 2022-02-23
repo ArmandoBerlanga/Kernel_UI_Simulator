@@ -119,6 +119,10 @@ export default defineComponent({
             {
                 label: 'HRRN',
                 value: 3
+            },
+            {
+                label: 'SJF',
+                value: 4
             }
         ];
 
@@ -156,6 +160,7 @@ export default defineComponent({
                 cpuRestante: 4,
                 quantum: 0,
                 tiempoBlocked: 0,
+                numPaginas: 20,
                 estado: 1
             },
             {
@@ -166,6 +171,7 @@ export default defineComponent({
                 cpuRestante: 12,
                 quantum: 0,
                 tiempoBlocked: 0,
+                numPaginas: 17,
                 estado: 2
             },
             {
@@ -176,6 +182,7 @@ export default defineComponent({
                 cpuRestante: 2,
                 quantum: 0,
                 tiempoBlocked: 0,
+                numPaginas: 14,
                 estado: 3
             },
             {
@@ -186,6 +193,7 @@ export default defineComponent({
                 cpuRestante: 4,
                 quantum: 0,
                 tiempoBlocked: 0,
+                numPaginas: 10,
                 estado: 4
             },
             {
@@ -196,6 +204,7 @@ export default defineComponent({
                 cpuRestante: 6,
                 quantum: 0,
                 tiempoBlocked: 0,
+                numPaginas: 8,
                 estado: 1
             },
             {
@@ -206,6 +215,7 @@ export default defineComponent({
                 cpuRestante: 5,
                 quantum: 0,
                 tiempoBlocked: 0,
+                numPaginas: 3,
                 estado: 4
             }
         ];
@@ -281,6 +291,7 @@ export default defineComponent({
                 cpuRestante: state.nuevo.ejecTotal,
                 quantum: state.tamQuantum,
                 tiempoBlocked: 0,
+                numPaginas: state.nuevo.paginas,
                 estado: 1
             };
 
@@ -306,6 +317,19 @@ export default defineComponent({
                     let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
                     return prioridadB - prioridadA;
                 });
+
+            } else if (state.algoritmo.value === 4) {
+
+                state.rows.running.map(p => p.estado = 1);
+                state.rows.ready.push(state.rows.running.pop());
+
+                proceso.estado = 2;
+                state.procesoRunning = proceso;
+                state.rows.running.push(proceso);
+                state.procesos.push(proceso);
+
+                state.rows.ready.sort((a, b) => a.numPaginas - b.numPaginas);
+
             } else {
                 state.procesos.push(proceso);
                 state.rows.ready.push(proceso);
@@ -341,6 +365,7 @@ export default defineComponent({
                             cpuRestante: state.contenidoFile[i + 1],
                             quantum: state.tamQuantum,
                             tiempoBlocked: 0,
+                            numPaginas: state.contenidoFile[i + 3],
                             estado: state.contenidoFile[i + 2]
                         }
 
@@ -362,6 +387,27 @@ export default defineComponent({
 
                         i += (numPaginas * 6 + 3);
                     }
+
+                    switch (state.algoritmo.value) {
+                        case 0: // FIFO
+                        case 1: // RR
+                            state.rows.ready.sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
+                            break;
+                        case 2: // SRT
+                            state.rows.ready.sort((a, b) => a.cpuRestante - b.cpuRestante);
+                            break;
+                        case 3: // HRRN
+                            state.rows.ready.sort((a, b) => {
+                                let prioridadA = (a.envejecimiento + (a.cpuAsignado + a.cpuRestante)) / (a.cpuAsignado + a.cpuRestante);
+                                let prioridadB = (b.envejecimiento + (b.cpuAsignado + b.cpuRestante)) / (b.cpuAsignado + b.cpuRestante);
+                                return prioridadB - prioridadA;
+                            });
+                            break;
+                        case 4: // SJF
+                            state.rows.ready.sort((a, b) => a.numPaginas - b.numPaginas);
+                            break;
+                    }
+
                 };
                 reader.onerror = (err) => console.log(err);
                 reader.readAsText(state.file);
@@ -511,6 +557,35 @@ export default defineComponent({
             dispatch();
         }
 
+        // NO APROPIATIVO
+        function ejecutarSJF() {
+
+            state.rows.ready.sort((a, b) => a.numPaginas - b.numPaginas);
+
+            let running = state.rows.running.find(p => p.estado === 2);
+            if (!running)
+                return;
+
+            if (running && running.cpuRestante > 1) {
+                running.cpuRestante--;
+                running.cpuAsignado++;
+            } else {
+                running.cpuRestante = 0;
+                running.envejecimiento = 0;
+                running.cpuAsignado = 0;
+                running.estado = 4;
+                state.rows.running.pop();
+                state.rows.finished.push(running);
+                // console.log(state.rows.ready);
+            }
+
+            if (state.rows.running.find(p => p.estado === 2))
+                return;
+
+            dispatch();
+
+        }
+
         // INTERRUPCIONES
 
         function intrDispositivoIO(id) {
@@ -639,8 +714,8 @@ export default defineComponent({
             for (let i = 0; i < state.rows.blocked.length; i++)
                 if (state.rows.blocked[i].tiempoBlocked >= 5) {
                     intrDispositivoIO(state.rows.blocked[i].id);
-                    // bool = false;
-                    // break;
+                    bool = false;
+                    break;
                 }
 
             if (bool) {
@@ -679,6 +754,9 @@ export default defineComponent({
                             break;
                         case 3:
                             ejecutarHRRN();
+                            break;
+                        case 4:
+                            ejecutarSJF();
                             break;
                     }
                 }
