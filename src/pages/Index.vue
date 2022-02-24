@@ -434,6 +434,7 @@ export default defineComponent({
         // NO APROPIATIVO
         function ejecutarFIFO() {
 
+            state.rows.ready.sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
             let running = state.rows.running.find(p => p.estado === 2);
             if (!running)
                 return;
