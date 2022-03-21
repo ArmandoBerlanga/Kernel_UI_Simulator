@@ -1,0 +1,24 @@
+#memoria {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 1rem;
+    .memoria-info {
+        padding: 1rem;
+        border-radius: 5px;
+        background-color: white;
+        .titulo {
+            font-size: 1.2rem;
+        }
+        .content {
+            display: flex;
+            flex-flow: column nowrap;
+            gap: 0.35rem;
+        }
+    }
+    .tabla-memoria {
+        grid-column: 1/6;
+    }
+    .memoria-info {
+        grid-column: 6/9;
+    }
+}

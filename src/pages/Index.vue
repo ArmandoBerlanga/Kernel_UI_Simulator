@@ -4,6 +4,7 @@
         <div class="tiempo-actual">
             <p> <span>TIEMPO ACTUAL: </span>{{ state.relojInterno }}</p>
             <q-btn color="primary" icon="play_arrow" label="EJECUTAR" @click="ejecutar" />
+            <q-btn color="red" icon="play_arrow" label="EJECUTAR PÁGINA" @click="ejecutarPagina" />
         </div>
 
         <q-select class="interrupcion" filled dense v-model="state.interrupcion" use-input input-debounce="0" label="Selecciona tu interrupción" :options="interrupciones" />
@@ -76,7 +77,28 @@
 
     <div class="sec memoria">
         <div class="nombre">MEMORIA</div>
-        <div class="content"></div>
+        <div class="content">
+
+            <div id="memoria">
+
+                <div class="tabla-memoria">
+                    <q-table style="height:180px" :rows="state.procesoRunning.paginas" :columns="state.columnsMemoria" row-key="index" virtual-scroll hide-pagination dense :pagination="pagination" :rows-per-page-options="[0]" no-data-label="Sin páginas" />
+                </div>
+
+                <div class="memoria-info">
+
+                    <div class="titulo">MEMORIA</div>
+                    <div class="content">
+                        <q-select v-model="state.algoritmoMemoria" label="Algoritmo" :options="algoritmosMemoria" dense filled />
+                        <q-btn color="primary" icon="save" label="GUARDAR" @click="guardarMemoria" />
+                        <q-btn color="primary" label="RESET BITS NUR" @click="resetearBits" />
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
     </div>
 </q-page>
 </template>
@@ -126,6 +148,24 @@ export default defineComponent({
             }
         ];
 
+        const algoritmosMemoria = [{
+                label: 'FIFO',
+                value: 0
+            },
+            {
+                label: 'LRU',
+                value: 1
+            },
+            {
+                label: 'LFU',
+                value: 2
+            },
+            {
+                label: 'NUR',
+                value: 3
+            }
+        ];
+
         const interrupciones = [{
                 label: 'SVC de solicitud de I/O', // manda el proceso a blocked, pasa el sig proceso de ready (empieza contador de espera de blocked)
                 value: 0
@@ -161,7 +201,35 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 numPaginas: 20,
-                estado: 1
+                estado: 1,
+                paginas: [{
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13000,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 2,
+                        ultAcceso: 9,
+                        accesos: 10,
+                        bitLectura: 1,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 10,
+                        ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    }
+                ]
             },
             {
                 id: 2,
@@ -172,7 +240,35 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 numPaginas: 17,
-                estado: 2
+                estado: 2,
+                paginas: [{
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13,
+                        bitLectura: 1,
+                        bitModificacion: 1
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 2,
+                        ultAcceso: 9,
+                        accesos: 10,
+                        bitLectura: 1,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 10,
+                        ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 1
+                    }
+                ]
             },
             {
                 id: 3,
@@ -183,7 +279,35 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 numPaginas: 14,
-                estado: 3
+                estado: 3,
+                paginas: [{
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13,
+                        bitLectura: 1,
+                        bitModificacion: 1
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 2,
+                        ultAcceso: 9,
+                        accesos: 10,
+                        bitLectura: 1,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 10,
+                        ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    }
+                ]
             },
             {
                 id: 4,
@@ -194,7 +318,35 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 numPaginas: 10,
-                estado: 4
+                estado: 4,
+                paginas: [{
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13,
+                        bitLectura: 1,
+                        bitModificacion: 1
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 2,
+                        ultAcceso: 9,
+                        accesos: 10,
+                        bitLectura: 1,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 10,
+                        ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    }
+                ]
             },
             {
                 id: 5,
@@ -205,7 +357,35 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 numPaginas: 8,
-                estado: 1
+                estado: 1,
+                paginas: [{
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13,
+                        bitLectura: 1,
+                        bitModificacion: 1
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 2,
+                        ultAcceso: 9,
+                        accesos: 10,
+                        bitLectura: 1,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 10,
+                        ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    }
+                ]
             },
             {
                 id: 6,
@@ -216,7 +396,35 @@ export default defineComponent({
                 quantum: 0,
                 tiempoBlocked: 0,
                 numPaginas: 3,
-                estado: 4
+                estado: 4,
+                paginas: [{
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13,
+                        bitLectura: 1,
+                        bitModificacion: 1
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 2,
+                        ultAcceso: 9,
+                        accesos: 10,
+                        bitLectura: 1,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 1,
+                        llegada: 10,
+                        ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    }
+                ]
             }
         ];
 
@@ -229,6 +437,56 @@ export default defineComponent({
             sortable: false,
         }]
 
+        let columnsMemoria = [{
+                name: 'index',
+                required: false,
+                label: 'num pag',
+                align: 'center',
+                field: row => row.index,
+                sortable: false,
+            },
+            {
+                name: 'bit r',
+                required: false,
+                label: 'bit r',
+                align: 'center',
+                field: row => row.bitResidencia,
+                sortable: false,
+            },
+            {
+                name: 'llegada',
+                required: false,
+                label: 'tmpo llegada',
+                align: 'center',
+                field: row => row.llegada,
+                sortable: false,
+            },
+            {
+                name: 'ult acceso',
+                required: false,
+                label: 'ult acceso',
+                align: 'center',
+                field: row => row.ultAcceso,
+                sortable: false,
+            },
+            {
+                name: 'accesos',
+                required: false,
+                label: 'accesos',
+                align: 'center',
+                field: row => row.accesos,
+                sortable: false,
+            },
+            {
+                name: 'NUR',
+                required: false,
+                label: 'NUR',
+                align: 'center',
+                field: row => row.bitLectura + ' ' + row.bitModificacion,
+                sortable: false,
+            }
+        ]
+
         const doc = ref(null);
         const state = reactive({
             procesoRunning: {
@@ -238,10 +496,12 @@ export default defineComponent({
                 envejecimiento: 0,
                 cpuRestante: 0,
                 quantum: 0,
-                estado: 2
+                estado: 2,
+                paginas: []
             },
             procesos: procesos,
             columns: columns,
+            columnsMemoria: columnsMemoria,
             rows: {
                 ready: [],
                 running: [],
@@ -257,9 +517,13 @@ export default defineComponent({
                 value: 0,
                 label: 'FIFO'
             },
+            algoritmoMemoria: {
+                value: 0,
+                label: 'FIFO'
+            },
             tamQuantum: 0,
             relojInterno: 0,
-            numPaginas: 0,
+            numPaginas: 3,
             interrupcion: null,
             file: null,
             contenidoFile: null
@@ -280,6 +544,8 @@ export default defineComponent({
                 blocked: state.procesos.filter(p => p.estado === 3).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada),
                 finished: state.procesos.filter(p => p.estado === 4).sort((a, b) => a.tiempoLlegada - b.tiempoLlegada)
             }
+
+            state.procesos.forEach(p => p.paginas.forEach(pag => pag.index = p.paginas.indexOf(pag)))
         });
 
         function addProceso() {
@@ -343,6 +609,8 @@ export default defineComponent({
             state.rows.running = [];
             state.rows.blocked = [];
             state.rows.finished = [];
+
+            // TODO: lectura de paginas
 
             state.file = doc.value.files[0];
             const reader = new FileReader();
@@ -699,6 +967,58 @@ export default defineComponent({
             intrSVCdeSolicitudIO();
         }
 
+        // ALGORITMOS DE MEMORIA
+
+        function ejecutarMemoriaFIFO() {
+            let paginas = state.procesoRunning.paginas
+                .filter(p => p.bitResidencia == 1)
+                .sort((a, b) => a.llegada - b.llegada);
+
+            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
+            // TODO: cambiar la nueva pagina con bit r 1
+        }
+
+        function ejecutarMemoriaLRU() {
+            let paginas = state.procesoRunning.paginas
+                .filter(p => p.bitResidencia == 1)
+                .sort((a, b) => a.ultAcceso - b.ultAcceso);
+
+            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
+            // TODO: cambiar la nueva pagina con bit r 1
+        }
+
+        function ejecutarMemoriaLFU() {
+            let paginas = state.procesoRunning.paginas
+                .filter(p => p.bitResidencia == 1)
+                .sort((a, b) => a.accesos - b.accesos);
+
+            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
+            // TODO: cambiar la nueva pagina con bit r 1
+        }
+
+        function ejecutarMemoriaNUR() {
+
+          let paginas = state.procesoRunning.paginas
+                .filter(p => p.bitResidencia == 1)
+                .sort((a, b) => {
+                    let sumaA = a.bitLectura + (a.bitModificacion == 1 ? 10 : 0);
+                    let sumaB = b.bitLectura + (b.bitModificacion == 1 ? 10 : 0);
+                    return sumaA - sumaB;
+                });
+
+          state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
+          // TODO: cambiar la nueva pagina con bit r 1
+        }
+
+        function ejecutarPagina() {
+            // TODO: implementar el switch
+            // TODO: cada 5 accesos cambiar bitMod a 1
+            // ejecutarMemoriaFIFO();
+            // ejecutarMemoriaLRU();
+            // ejecutarMemoriaLFU();
+            // ejecutarMemoriaNUR();
+        }
+
         function ejecutar() {
             state.relojInterno++;
             state.procesos.map(p => {
@@ -765,6 +1085,14 @@ export default defineComponent({
             state.interrupcion = null;
         }
 
+        function resetearBits() {
+            state.procesoRunning.paginas.map(p => {
+                p.bitModificacion = 0;
+                p.bitLectura = 0;
+                return p;
+            });
+        }
+
         function guardar() {
             if (state.algoritmo.value == 1)
                 state.procesos.map(p => {
@@ -773,12 +1101,20 @@ export default defineComponent({
                 });
         }
 
+        function guardarMemoria() {
+            console.log(state.algoritmoMemoria.value);
+        }
+
         return {
             state,
             algoritmos,
+            algoritmosMemoria,
             interrupciones,
             ejecutar,
+            ejecutarPagina,
+            resetearBits,
             guardar,
+            guardarMemoria,
             addProceso,
             addProcesos,
             doc,
@@ -793,6 +1129,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import 'src/css/procesos.scss';
 @import 'src/css/cpu.scss';
+@import 'src/css/memoria.scss';
 
 * {
     margin: 0;
