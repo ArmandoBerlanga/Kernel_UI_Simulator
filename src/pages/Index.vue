@@ -623,8 +623,6 @@ export default defineComponent({
             state.rows.blocked = [];
             state.rows.finished = [];
 
-            // TODO: lectura de paginas
-
             state.file = doc.value.files[0];
             const reader = new FileReader();
             if (state.file.name.includes(".txt")) {
@@ -643,12 +641,24 @@ export default defineComponent({
                             tiempoLlegada: state.contenidoFile[i],
                             cpuAsignado: 0,
                             envejecimiento: 0,
-                            cpuRestante: state.contenidoFile[i + 1],
+                            cpuRestante: state.contenidoFile[++i],
                             quantum: state.tamQuantum,
                             tiempoBlocked: 0,
-                            numPaginas: state.contenidoFile[i + 3],
-                            estado: state.contenidoFile[i + 2]
+                            estado: state.contenidoFile[++i],
+                            numPaginas: state.contenidoFile[++i],
+                            paginas:[]
                         }
+
+                        for(let j = 0; j < proceso.numPaginas; j++)
+                            proceso.paginas.push({
+                                index: j+1,
+                                bitResidencia: state.contenidoFile[++i],
+                                llegada: state.contenidoFile[++i],
+                                ultAcceso: state.contenidoFile[++i],
+                                accesos: state.contenidoFile[++i],
+                                bitLectura: state.contenidoFile[++i],
+                                bitModificacion: state.contenidoFile[++i]
+                            })
 
                         state.procesos.push(proceso);
 
@@ -664,9 +674,7 @@ export default defineComponent({
                                 state.rows.blocked.push(proceso);
                                 break;
                         }
-                        let numPaginas = state.contenidoFile[i + 3];
 
-                        i += (numPaginas * 6 + 3);
                     }
 
                     switch (state.algoritmo.value) {
@@ -688,6 +696,9 @@ export default defineComponent({
                             state.rows.ready.sort((a, b) => a.numPaginas - b.numPaginas);
                             break;
                     }
+
+
+                    // console.log(state.procesoRunning);
 
                 };
                 reader.onerror = (err) => console.log(err);
