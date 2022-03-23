@@ -1094,6 +1094,8 @@ export default defineComponent({
                             ejecutarSJF();
                             break;
                     }
+
+                    ejecutarPagina();
                 }
             }
             state.interrupcion = null;
@@ -1125,7 +1127,6 @@ export default defineComponent({
             algoritmosMemoria,
             interrupciones,
             ejecutar,
-            ejecutarPagina,
             resetearBits,
             guardar,
             guardarMemoria,
