@@ -205,7 +205,7 @@ export default defineComponent({
                 paginas: [{
                         index: 0,
                         bitResidencia: 1,
-                        llegada: 1,
+                        llegada: 11,
                         ultAcceso: 8,
                         accesos: 13000,
                         bitLectura: 0,
@@ -213,8 +213,8 @@ export default defineComponent({
                     },
                     {
                         index: 0,
-                        bitResidencia: 1,
-                        llegada: 2,
+                        bitResidencia: 0,
+                        llegada: 12,
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
@@ -223,8 +223,17 @@ export default defineComponent({
                     {
                         index: 0,
                         bitResidencia: 1,
-                        llegada: 10,
+                        llegada: 15,
                         ultAcceso: 12,
+                        accesos: 4,
+                        bitLectura: 0,
+                        bitModificacion: 0
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 0,
+                        llegada: 1,
+                        ultAcceso: 1100,
                         accesos: 4,
                         bitLectura: 0,
                         bitModificacion: 0
@@ -244,7 +253,7 @@ export default defineComponent({
                 paginas: [{
                         index: 0,
                         bitResidencia: 1,
-                        llegada: 1,
+                        llegada: 11,
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
@@ -253,7 +262,7 @@ export default defineComponent({
                     {
                         index: 0,
                         bitResidencia: 1,
-                        llegada: 2,
+                        llegada: 12,
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
@@ -267,7 +276,16 @@ export default defineComponent({
                         accesos: 4,
                         bitLectura: 0,
                         bitModificacion: 1
-                    }
+                    },
+                    {
+                        index: 0,
+                        bitResidencia: 0,
+                        llegada: 1,
+                        ultAcceso: 8,
+                        accesos: 13,
+                        bitLectura: 1,
+                        bitModificacion: 1
+                    },
                 ]
             },
             {
@@ -999,7 +1017,7 @@ export default defineComponent({
                 .sort((a, b) => a.llegada - b.llegada);
 
             state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            // TODO: cambiar la nueva pagina con bit r 1
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutarMemoriaLRU() {
@@ -1008,7 +1026,7 @@ export default defineComponent({
                 .sort((a, b) => a.ultAcceso - b.ultAcceso);
 
             state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            // TODO: cambiar la nueva pagina con bit r 1
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutarMemoriaLFU() {
@@ -1017,7 +1035,7 @@ export default defineComponent({
                 .sort((a, b) => a.accesos - b.accesos);
 
             state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            // TODO: cambiar la nueva pagina con bit r 1
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutarMemoriaNUR() {
@@ -1031,16 +1049,33 @@ export default defineComponent({
                 });
 
           state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-          // TODO: cambiar la nueva pagina con bit r 1
+          state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutarPagina() {
-            // TODO: implementar el switch
             // TODO: cada 5 accesos cambiar bitMod a 1
-            // ejecutarMemoriaFIFO();
-            // ejecutarMemoriaLRU();
-            // ejecutarMemoriaLFU();
-            // ejecutarMemoriaNUR();
+            // TODO: implementar fallo de pagina
+
+            let pasginasUsadas = state.procesoRunning.paginas.filter(p => p.bitResidencia == 1).length;
+            let paginaActiva = state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia == 0;
+
+            if(state.numPaginas == pasginasUsadas && paginaActiva)
+              switch (state.algoritmoMemoria.value) {
+                  case 0:
+                      ejecutarMemoriaFIFO();
+                      break;
+                  case 1:
+                      ejecutarMemoriaLRU();
+                      break;
+                  case 2:
+                      ejecutarMemoriaLFU();
+                      break;
+                  case 3:
+                      ejecutarMemoriaNUR();
+                      break;
+              }
+            else
+              state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutar() {
