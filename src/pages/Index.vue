@@ -563,7 +563,7 @@ export default defineComponent({
                 paginas:[]
             };
 
-            for (let i = 0; i < state.nuevo.paginas; i++) {
+            for (let i = 0; i < state.nuevo.paginas; i++)
                 proceso.paginas.push({
                     index: i,
                     bitResidencia: 1,
@@ -573,7 +573,6 @@ export default defineComponent({
                     bitLectura: 0,
                     bitModificacion: 0
                 })
-            }
 
             state.rows.ready.sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
 
