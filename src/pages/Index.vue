@@ -578,7 +578,7 @@ export default defineComponent({
                 tiempoBlocked: 0,
                 numPaginas: state.nuevo.paginas,
                 estado: 1,
-                paginas:[]
+                paginas: []
             };
 
             for (let i = 0; i < state.nuevo.paginas; i++)
@@ -664,12 +664,12 @@ export default defineComponent({
                             tiempoBlocked: 0,
                             estado: state.contenidoFile[++i],
                             numPaginas: state.contenidoFile[++i],
-                            paginas:[]
+                            paginas: []
                         }
 
-                        for(let j = 0; j < proceso.numPaginas; j++)
+                        for (let j = 0; j < proceso.numPaginas; j++)
                             proceso.paginas.push({
-                                index: j+1,
+                                index: j + 1,
                                 bitResidencia: state.contenidoFile[++i],
                                 llegada: state.contenidoFile[++i],
                                 ultAcceso: state.contenidoFile[++i],
@@ -714,7 +714,6 @@ export default defineComponent({
                             state.rows.ready.sort((a, b) => a.numPaginas - b.numPaginas);
                             break;
                     }
-
 
                     // console.log(state.procesoRunning);
 
@@ -1040,7 +1039,7 @@ export default defineComponent({
 
         function ejecutarMemoriaNUR() {
 
-          let paginas = state.procesoRunning.paginas
+            let paginas = state.procesoRunning.paginas
                 .filter(p => p.bitResidencia == 1)
                 .sort((a, b) => {
                     let sumaA = a.bitLectura + (a.bitModificacion == 1 ? 10 : 0);
@@ -1048,8 +1047,8 @@ export default defineComponent({
                     return sumaA - sumaB;
                 });
 
-          state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-          state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutarPagina() {
@@ -1059,23 +1058,23 @@ export default defineComponent({
             let pasginasUsadas = state.procesoRunning.paginas.filter(p => p.bitResidencia == 1).length;
             let paginaActiva = state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia == 0;
 
-            if(state.numPaginas == pasginasUsadas && paginaActiva)
-              switch (state.algoritmoMemoria.value) {
-                  case 0:
-                      ejecutarMemoriaFIFO();
-                      break;
-                  case 1:
-                      ejecutarMemoriaLRU();
-                      break;
-                  case 2:
-                      ejecutarMemoriaLFU();
-                      break;
-                  case 3:
-                      ejecutarMemoriaNUR();
-                      break;
-              }
+            if (state.numPaginas == pasginasUsadas && paginaActiva)
+                switch (state.algoritmoMemoria.value) {
+                    case 0:
+                        ejecutarMemoriaFIFO();
+                        break;
+                    case 1:
+                        ejecutarMemoriaLRU();
+                        break;
+                    case 2:
+                        ejecutarMemoriaLFU();
+                        break;
+                    case 3:
+                        ejecutarMemoriaNUR();
+                        break;
+                }
             else
-              state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
         }
 
         function ejecutar() {
