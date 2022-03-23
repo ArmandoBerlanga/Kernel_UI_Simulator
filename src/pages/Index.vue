@@ -3,8 +3,8 @@
     <div class="acciones">
         <div class="tiempo-actual">
             <p> <span>TIEMPO ACTUAL: </span>{{ state.relojInterno }}</p>
+            <q-select class="interrupcion" filled dense v-model="state.ejecutarPagina" use-input input-debounce="0" label="PÁGINA" :options="state.procesoRunning.paginas.flatMap(p => p.index)" />
             <q-btn color="primary" icon="play_arrow" label="EJECUTAR" @click="ejecutar" />
-            <q-btn color="red" icon="play_arrow" label="EJECUTAR PÁGINA" @click="ejecutarPagina" />
         </div>
 
         <q-select class="interrupcion" filled dense v-model="state.interrupcion" use-input input-debounce="0" label="Selecciona tu interrupción" :options="interrupciones" />
@@ -499,6 +499,7 @@ export default defineComponent({
                 estado: 2,
                 paginas: []
             },
+            ejecutarPagina: 0,
             procesos: procesos,
             columns: columns,
             columnsMemoria: columnsMemoria,
@@ -558,8 +559,21 @@ export default defineComponent({
                 quantum: state.tamQuantum,
                 tiempoBlocked: 0,
                 numPaginas: state.nuevo.paginas,
-                estado: 1
+                estado: 1,
+                paginas:[]
             };
+
+            for (let i = 0; i < state.nuevo.paginas; i++) {
+                proceso.paginas.push({
+                    index: i,
+                    bitResidencia: 1,
+                    llegada: state.relojInterno,
+                    ultAcceso: 0,
+                    accesos: 0,
+                    bitLectura: 0,
+                    bitModificacion: 0
+                })
+            }
 
             state.rows.ready.sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
 
