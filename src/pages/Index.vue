@@ -1146,10 +1146,12 @@ export default defineComponent({
         }
 
         function resetearBits() {
-            state.procesoRunning.paginas.map(p => {
-                p.bitModificacion = 0;
-                p.bitLectura = 0;
-                return p;
+            state.procesos.forEach(proceso => {
+                proceso.paginas.map(p => {
+                    p.bitModificacion = 0;
+                    p.bitLectura = 0;
+                    return p;
+                });
             });
         }
 
