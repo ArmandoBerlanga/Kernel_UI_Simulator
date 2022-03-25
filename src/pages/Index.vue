@@ -24,7 +24,7 @@
                         <q-input v-model.number="state.nuevo.ejecTotal" label="Ejec Total" dense type="number" filled />
 
                         <div class="botones">
-                            <q-btn color="primary" dense icon="add" @click="addProceso" />
+                            <q-btn color="primary" dense icon="add" @click="addProceso" :disabled="state.procesos.filter(p=>p.estado!=4).length==6" />
                             <q-btn id="btn" color="primary" dense icon="upload" />
                             <input id="input-file" type="file" ref="doc" @change="addProcesos" style="display: none;" />
                         </div>
@@ -209,7 +209,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13000,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -218,7 +219,8 @@ export default defineComponent({
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -227,7 +229,8 @@ export default defineComponent({
                         ultAcceso: 12,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -236,7 +239,8 @@ export default defineComponent({
                         ultAcceso: 1100,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     }
                 ]
             },
@@ -257,7 +261,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -266,7 +271,8 @@ export default defineComponent({
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -275,7 +281,8 @@ export default defineComponent({
                         ultAcceso: 12,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -284,7 +291,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                 ]
             },
@@ -305,7 +313,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -314,7 +323,8 @@ export default defineComponent({
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -323,7 +333,8 @@ export default defineComponent({
                         ultAcceso: 12,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     }
                 ]
             },
@@ -344,7 +355,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -353,7 +365,8 @@ export default defineComponent({
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -362,7 +375,8 @@ export default defineComponent({
                         ultAcceso: 12,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     }
                 ]
             },
@@ -383,7 +397,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -392,7 +407,8 @@ export default defineComponent({
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -401,7 +417,8 @@ export default defineComponent({
                         ultAcceso: 12,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     }
                 ]
             },
@@ -422,7 +439,8 @@ export default defineComponent({
                         ultAcceso: 8,
                         accesos: 13,
                         bitLectura: 1,
-                        bitModificacion: 1
+                        bitModificacion: 1,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -431,7 +449,8 @@ export default defineComponent({
                         ultAcceso: 9,
                         accesos: 10,
                         bitLectura: 1,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     },
                     {
                         index: 0,
@@ -440,7 +459,8 @@ export default defineComponent({
                         ultAcceso: 12,
                         accesos: 4,
                         bitLectura: 0,
-                        bitModificacion: 0
+                        bitModificacion: 0,
+                        contAccesos: 0
                     }
                 ]
             }
@@ -584,12 +604,13 @@ export default defineComponent({
             for (let i = 0; i < state.nuevo.paginas; i++)
                 proceso.paginas.push({
                     index: i,
-                    bitResidencia: 1,
+                    bitResidencia: 0,
                     llegada: state.relojInterno,
                     ultAcceso: 0,
                     accesos: 0,
                     bitLectura: 0,
-                    bitModificacion: 0
+                    bitModificacion: 0,
+                    contAccesos: 0
                 })
 
             state.rows.ready.sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
@@ -669,13 +690,14 @@ export default defineComponent({
 
                         for (let j = 0; j < proceso.numPaginas; j++)
                             proceso.paginas.push({
-                                index: j + 1,
+                                index: j,
                                 bitResidencia: state.contenidoFile[++i],
                                 llegada: state.contenidoFile[++i],
                                 ultAcceso: state.contenidoFile[++i],
                                 accesos: state.contenidoFile[++i],
                                 bitLectura: state.contenidoFile[++i],
-                                bitModificacion: state.contenidoFile[++i]
+                                bitModificacion: state.contenidoFile[++i],
+                                contAccesos: 0
                             })
 
                         state.procesos.push(proceso);
@@ -1055,10 +1077,11 @@ export default defineComponent({
             // TODO: cada 5 accesos cambiar bitMod a 1
             // TODO: implementar fallo de pagina
 
-            let pasginasUsadas = state.procesoRunning.paginas.filter(p => p.bitResidencia == 1).length;
-            let paginaActiva = state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia == 0;
 
-            if (state.numPaginas == pasginasUsadas && paginaActiva)
+            let paginasUsadas = state.procesoRunning.paginas.filter(p => p.bitResidencia == 1).length;
+            let paginaActiva = state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia == 0;
+            let falloPagina = state.numPaginas == paginasUsadas && paginaActiva;
+            if (falloPagina)
                 switch (state.algoritmoMemoria.value) {
                     case 0:
                         ejecutarMemoriaFIFO();
@@ -1075,6 +1098,26 @@ export default defineComponent({
                 }
             else
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+
+            //Incrementar número de accesos
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos++;
+
+            //Actualizar último acceso 
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = state.relojInterno;
+            
+            //Actualizar bit de lectura
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 1;
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos++;
+
+            //Actualizar bit de escritura cuando el número de accesos llegue a 5
+            if (state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos == 5) {
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitModificacion = 1;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos = 0;
+            }
+
+            if (falloPagina) 
+                intrSVCdeSolicitudIO();
+
         }
 
         function ejecutar() {
