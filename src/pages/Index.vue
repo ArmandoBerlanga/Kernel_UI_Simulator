@@ -1030,6 +1030,27 @@ export default defineComponent({
             intrSVCdeSolicitudIO();
         }
 
+        function cambiarAtributosPaginas(index) {
+            //AL PROCESO QUE SALE
+            state.procesoRunning.paginas.find(p => p.index == index).bitResidencia = 0;
+            // state.procesoRunning.paginas.find(p => p.index == index).accesos = 0;
+            // state.procesoRunning.paginas.find(p => p.index == index).ultAcceso = 0;
+            // state.procesoRunning.paginas.find(p => p.index == index).bitLectura = 0;
+            // state.procesoRunning.paginas.find(p => p.index == index).bitModificacion = 0;
+            // state.procesoRunning.paginas.find(p => p.index == index).tiempoLlegada = 0;
+
+
+            //AL PROCESO QUE ENTRA
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+            //Poner nuevo tiempo de llegada
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).llegada = state.relojInterno+5;
+            //Poner el resto a 0
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos = 0;
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = 0;
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 0;
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitModificacion = 0;
+        }
+
         // ALGORITMOS DE MEMORIA
 
         function ejecutarMemoriaFIFO() {
@@ -1037,8 +1058,7 @@ export default defineComponent({
                 .filter(p => p.bitResidencia == 1)
                 .sort((a, b) => a.llegada - b.llegada);
 
-            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+            cambiarAtributosPaginas(paginas[0].index);
         }
 
         function ejecutarMemoriaLRU() {
@@ -1046,8 +1066,7 @@ export default defineComponent({
                 .filter(p => p.bitResidencia == 1)
                 .sort((a, b) => a.ultAcceso - b.ultAcceso);
 
-            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+            cambiarAtributosPaginas(paginas[0].index);
         }
 
         function ejecutarMemoriaLFU() {
@@ -1055,8 +1074,7 @@ export default defineComponent({
                 .filter(p => p.bitResidencia == 1)
                 .sort((a, b) => a.accesos - b.accesos);
 
-            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+            cambiarAtributosPaginas(paginas[0].index);
         }
 
         function ejecutarMemoriaNUR() {
@@ -1069,8 +1087,7 @@ export default defineComponent({
                     return sumaA - sumaB;
                 });
 
-            state.procesoRunning.paginas.find(p => p.index == paginas[0].index).bitResidencia = 0;
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+            cambiarAtributosPaginas(paginas[0].index);
         }
 
         function ejecutarPagina() {
@@ -1100,14 +1117,14 @@ export default defineComponent({
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
 
             //Incrementar número de accesos
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos++;
-
             //Actualizar último acceso 
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = state.relojInterno;
-            
             //Actualizar bit de lectura
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 1;
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos++;
+            if(!falloPagina) {
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos++;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = state.relojInterno;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 1;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos++;
+            }
 
             //Actualizar bit de escritura cuando el número de accesos llegue a 5
             if (state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos == 5) {
