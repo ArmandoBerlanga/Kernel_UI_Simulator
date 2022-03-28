@@ -122,7 +122,7 @@ export default defineComponent({
     name: 'PageIndex',
 
     setup() {
-        document.title = 'Nuestro SO';
+        document.title = 'Kernelsito';
 
         const $q = useQuasar();
 
@@ -1033,12 +1033,6 @@ export default defineComponent({
         function cambiarAtributosPaginas(index) {
             //AL PROCESO QUE SALE
             state.procesoRunning.paginas.find(p => p.index == index).bitResidencia = 0;
-            // state.procesoRunning.paginas.find(p => p.index == index).accesos = 0;
-            // state.procesoRunning.paginas.find(p => p.index == index).ultAcceso = 0;
-            // state.procesoRunning.paginas.find(p => p.index == index).bitLectura = 0;
-            // state.procesoRunning.paginas.find(p => p.index == index).bitModificacion = 0;
-            // state.procesoRunning.paginas.find(p => p.index == index).tiempoLlegada = 0;
-
 
             //AL PROCESO QUE ENTRA
             state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
@@ -1050,6 +1044,8 @@ export default defineComponent({
             state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 0;
             state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitModificacion = 0;
         }
+
+
 
         // ALGORITMOS DE MEMORIA
 
@@ -1091,10 +1087,6 @@ export default defineComponent({
         }
 
         function ejecutarPagina() {
-            // TODO: cada 5 accesos cambiar bitMod a 1
-            // TODO: implementar fallo de pagina
-
-
             let paginasUsadas = state.procesoRunning.paginas.filter(p => p.bitResidencia == 1).length;
             let paginaActiva = state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia == 0;
             let falloPagina = state.numPaginas == paginasUsadas && paginaActiva;
@@ -1132,8 +1124,28 @@ export default defineComponent({
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).contAccesos = 0;
             }
 
-            if (falloPagina) 
+            if (!falloPagina && paginaActiva) {
+                //AL PROCESO QUE ENTRA
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
+                //Poner nuevo tiempo de llegada
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).llegada = state.relojInterno+5;
+                //Poner el resto a 0
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos = 0;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = 0;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 0;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitModificacion = 0;
+            }
+            
+            if (paginaActiva) {
+                $q.notify({
+                    message: 'Fallo de página',
+                    type: 'warning',
+                    position: 'top',
+                    color: 'warning'
+                });
                 intrSVCdeSolicitudIO();
+
+            }
 
         }
 
