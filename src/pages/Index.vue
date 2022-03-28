@@ -24,7 +24,7 @@
                         <q-input v-model.number="state.nuevo.ejecTotal" label="Ejec Total" dense type="number" filled />
 
                         <div class="botones">
-                            <q-btn color="primary" dense icon="add" @click="addProceso" :disabled="state.procesos.filter(p=>p.estado!=4).length==6" />
+                            <q-btn color="primary" dense icon="add" @click="addProceso" :disabled="state.procesos.filter(p=>p.estado!=4).length==10" />
                             <q-btn id="btn" color="primary" dense icon="upload" />
                             <input id="input-file" type="file" ref="doc" @change="addProcesos" style="display: none;" />
                         </div>
