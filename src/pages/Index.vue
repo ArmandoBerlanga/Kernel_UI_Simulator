@@ -922,7 +922,9 @@ export default defineComponent({
 
         function intrDispositivoIO(id) {
 
-            let running = state.rows.running.find(p => p.estado === 2);
+            let running = null;
+            if(state.algoritmo.value != 0)
+              running = state.rows.running.find(p => p.estado === 2);
 
             if (running && running.cpuRestante > 1) {
                 state.rows.running.map(p => p.estado = 1);
@@ -941,8 +943,8 @@ export default defineComponent({
             });
 
             state.rows.ready.push(state.rows.blocked.shift());
-
-            dispatch();
+            if(state.algoritmo.value != 0)
+              dispatch();
         }
 
         function intrSVCdeSolicitudIO() {
@@ -1052,7 +1054,7 @@ export default defineComponent({
         function ejecutarMemoriaFIFO() {
             let paginas = state.procesoRunning.paginas
                 .filter(p => p.bitResidencia == 1)
-                .sort((a, b) => a.llegada - b.llegada);
+                .sort((a, b) => a.tiempoLlegada - b.tiempoLlegada);
 
             cambiarAtributosPaginas(paginas[0].index);
         }
