@@ -1037,7 +1037,7 @@ export default defineComponent({
             //AL PROCESO QUE ENTRA
             state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
             //Poner nuevo tiempo de llegada
-            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).llegada = state.relojInterno+5;
+            state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).llegada = state.relojInterno;
             //Poner el resto a 0
             state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos = 0;
             state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = 0;
@@ -1078,8 +1078,8 @@ export default defineComponent({
             let paginas = state.procesoRunning.paginas
                 .filter(p => p.bitResidencia == 1)
                 .sort((a, b) => {
-                    let sumaA = a.bitLectura + (a.bitModificacion == 1 ? 10 : 0);
-                    let sumaB = b.bitLectura + (b.bitModificacion == 1 ? 10 : 0);
+                    let sumaA = a.bitLectura + a.bitModificacion * 2;
+                    let sumaB = b.bitLectura + b.bitModificacion * 2;
                     return sumaA - sumaB;
                 });
 
@@ -1109,7 +1109,7 @@ export default defineComponent({
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
 
             //Incrementar número de accesos
-            //Actualizar último acceso 
+            //Actualizar último acceso
             //Actualizar bit de lectura
             if(!falloPagina) {
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos++;
@@ -1128,14 +1128,14 @@ export default defineComponent({
                 //AL PROCESO QUE ENTRA
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitResidencia = 1;
                 //Poner nuevo tiempo de llegada
-                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).llegada = state.relojInterno+5;
+                state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).llegada = state.relojInterno;
                 //Poner el resto a 0
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).accesos = 0;
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).ultAcceso = 0;
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitLectura = 0;
                 state.procesoRunning.paginas.find(p => p.index == state.ejecutarPagina).bitModificacion = 0;
             }
-            
+
             if (paginaActiva) {
                 $q.notify({
                     message: 'Fallo de página',
@@ -1144,7 +1144,6 @@ export default defineComponent({
                     color: 'warning'
                 });
                 intrSVCdeSolicitudIO();
-
             }
 
         }
