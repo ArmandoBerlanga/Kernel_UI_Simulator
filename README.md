@@ -1,2 +1,1 @@
-# PROYECTO SO
-## PROYECTO BY MELANIA Y ARMANDO
+# Basic kernel simulation for the subject of Operating Systems
